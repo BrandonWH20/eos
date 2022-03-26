@@ -1,9 +1,12 @@
-#include <eosio.token/eosio.token.hpp>
+#include <eosio.token/genome.token.hpp>
 
 namespace eosio {
 
 void token::create( const name&   issuer,
-                    const asset&  maximum_supply )
+                    const asset&  maximum_supply,
+                    const gname&  strain,
+                    const ghash&  genomehash,
+                    const glink&  genomefile)
 {
     require_auth( get_self() );
 
@@ -16,10 +19,15 @@ void token::create( const name&   issuer,
     auto existing = statstable.find( sym.code().raw() );
     check( existing == statstable.end(), "token with symbol already exists" );
 
+    stats statstable(get_self(), )
+
     statstable.emplace( get_self(), [&]( auto& s ) {
        s.supply.symbol = maximum_supply.symbol;
        s.max_supply    = maximum_supply;
        s.issuer        = issuer;
+       s.strain        = strain;
+       s.genomehash    = genomehash;
+       s.genomefile    = genomefile;
     });
 }
 
