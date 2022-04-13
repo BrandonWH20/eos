@@ -1,100 +1,114 @@
-/// @tiltle GAN (Genome assigned name) for managing tables
-/// Brandon H
-///
-/// using
-/// title eosio.nft public interface
-/// dev See https://github.com/jafri/eosio.nft/blob/master/README.md
-
-#include <eosio/eosio.hpp>
-#include <eosio/print.hpp>
-#include <set>
+#include <eosiolib/eosio.hpp>
+#include <eosiolib/asset.hpp>
 #include <string>
+#include <vector>
+#include <set>
+#include <print>
 
 
-using namespace  eosio;
-using namespace std;
+using namespace eosio;
+using std::string;
+using std::vector;
+typedef uint128_t uuid;
+typedef uint64_t id_type;
+typedef string uri_type;
 
-// we should design eacb GAN to have 10 sequences used as a table/siblings.
+CONTRACT nft : public eosio::contract {
 
-// would allow us to create a family, basically they can be no different than 10% of the other 9
-// This number should be reconsidered with further research.
-
-// Tho goal of this contract is to create a set of each genome, each set
-
-class [[eosio::contract("genometable-1")]] genometable : public eosio::contract
-{
 public:
-    using contract::contract
+using contract::contract;
+nft( name receiver, name code, datastream<const char*> ds)
+: contract(receiver, code, ds), tokens(receiver, receiver.value) {}
 
-    TABLE gan
-    {
-        // Table row id
-        // strain name
-        // url to genome folder still massive file size right now.
-        time_point_sec timestamp;
-        uint64_t id;
-        string  strain;
-        string  genomehash;
-        string  genomefile;
 
-        // Define primary key
-        auto primary_key() const { return id; }
-        uint64_t by_time() const { return timestamp.sec_since_epoch(); }
+ACTION create(name issuer, std::string symbol);
 
-        // need to define how to (de)serialize this structure
-        // otherwise saving data will produce a WASM Runtime Error
-        // gan being a custom datatype "Genome assigned name"
-        EOSLIB_SERIALIZE(gan, (id)(strain)(genomehash)(genomefile)(timestamp))
-        };
+ACTION issue(name to,
+asset quantity,
+        vector<string> uris,
+string name,
+        string memo);
 
-    // define genomelist as the multi_index storing the genome
-    // first argument is the table name
-    // and must match the name of the table in the ABI
-    // second argument is the struct used as a row in genomelist
+ACTION transferid(name from,
+name to,
+        id_type id,
+string memo);
 
-    typedef eosio::multi_index<
-            "gans"_n,
-            gan,
-            indexed_by<"time"_n, const_mem_fun<tweet, uint64_t, &gan::by_time>>>
-            gans;
+ACTION transfer(name from,
+name to,
+        asset quantity,
+string memo);
 
-    /// Creates token with a symbol name for the specified issuer account.
-    /// Throws if token with specified symbol already exists.
-    /// @param issuer Account name of the token issuer
-    /// @param symbol Symbol code of the token
-    ACTION create(name issuer, ){}
+ACTION burn(name owner,
+id_type token_id);
 
-    ACTION issue(name from, const string &strain, const string &genomehash, const string genomefile)
-    {
-        // authenticate 'from account to check gans integrity
-        // will check if the action has the permission of 'from' account
-        require_auth(from);
+ACTION setrampayer(name payer, id_type id);
 
-        // initialize table attributes
-        // code is the contract account that owns the table
-        name code = _self;
 
-        // scope refers to the account that owns this data
-        name scope = _slef;
-        gans gans_table(code, scope.value)
+TABLE account {
 
-        // place the genome assigned name from action
-        // first arg pays for entry
-        // need to authorize from paying account
-        gans_table.emplace(from, [&](gan &t)
+        asset balance;
+
+        uint64_t primary_key() const { return balance.symbol.code().raw(); }
+};
+
+
+TABLE stats {
+        asset supply;
+        name issuer;
+
+        uint64_t primary_key() const { return supply.symbol.code().raw(); }
+        uint64_t get_issuer() const { return issuer.value; }
+};
+
+
+TABLE token {
+        id_type id;          // Unique 64 bit identifier,
+        uri_type uri;        // RFC 3986
+        name owner;  	 // token owner
+        asset value;         // token value (1 SYS)
+        string tokenName;	 // token name
+
+        id_type primary_key() const { return id; }
+        uint64_t get_owner() const { return owner.value; }
+        string get_uri() const { return uri; }
+        asset get_value() const { return value; }
+        uint64_t get_symbol() const { return value.symbol.code().raw(); }
+        string get_name() const { return tokenName; }
+
+        // generated token global uuid based on token id and
+        // contract name, passed in the argument
+        uuid get_global_id(name self) const
         {
-            //increment key id
-            t.id = gans_table.available_primary_key();
-            t.from = from;
-            t.strin = strain;
-            t.genomehash = genomehash;
-            t.genomefile = genomefile;
-            t.timestamp = time_point_sec(time_in_seconds);
+            uint128_t self_128 = static_cast<uint128_t>(self.value);
+            uint128_t id_128 = static_cast<uint128_t>(id);
+            uint128_t res = (self_128 << 64) | (id_128);
+            return res;
+        }
 
-        });
-        print("GAN from ", name(from), ": \n", "STRAIN: ", strain, "\n" )
-    }
+        string get_unique_name() const
+        {
+            string unique_name = tokenName + "#" + std::to_string(id);
+            return unique_name;
+        }
+};
 
+using account_index = eosio::multi_index<"accounts"_n, account>;
 
+using currency_index = eosio::multi_index<"stat"_n, stats,
+        indexed_by< "byissuer"_n, const_mem_fun< stats, uint64_t, &stats::get_issuer> > >;
 
+using token_index = eosio::multi_index<"token"_n, token,
+        indexed_by< "byowner"_n, const_mem_fun< token, uint64_t, &token::get_owner> >,
+indexed_by< "bysymbol"_n, const_mem_fun< token, uint64_t, &token::get_symbol> > >;
+
+private:
+token_index tokens;
+
+void mint(name owner, name ram_payer, asset value, string uri, string name);
+
+void sub_balance(name owner, asset value);
+void add_balance(name owner, asset value, name ram_payer);
+void sub_supply(asset quantity);
+void add_supply(asset quantity);
 };
