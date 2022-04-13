@@ -20,8 +20,7 @@ using namespace std;
 
 // Tho goal of this contract is to create a set of each genome, each set
 
-class [[eosio::contract("genometable-1")]] genometable : public eosio::contract
-{
+class [[eosio::contract("hashtable")]] hashtable : public eosio::contract {
 public:
     using contract::contract
 
@@ -54,17 +53,15 @@ public:
     typedef eosio::multi_index<
             "gans"_n,
             gan,
-            indexed_by<"time"_n, const_mem_fun<tweet, uint64_t, &gan::by_time>>>
+            indexed_by<"time"_n, const_mem_fun < tweet, uint64_t, &gan::by_time>>>
     gans;
 
     /// Creates token with a symbol name for the specified issuer account.
     /// Throws if token with specified symbol already exists.
     /// @param issuer Account name of the token issuer
     /// @param symbol Symbol code of the token
-    ACTION create(name issuer, ){}
 
-    ACTION issue(name from, const string &strain, const string &genomehash, const string genomefile)
-    {
+    ACTION issue(name from, const string &strain, const string &genomehash, const string genomefile) {
         // authenticate 'from account to check gans integrity
         // will check if the action has the permission of 'from' account
         require_auth(from);
@@ -80,8 +77,7 @@ public:
         // place the genome assigned name from action
         // first arg pays for entry
         // need to authorize from paying account
-        gans_table.emplace(from, [&](gan &t)
-        {
+        gans_table.emplace(from, [&](gan &t) {
             //increment key id
             t.id = gans_table.available_primary_key();
             t.from = from;
@@ -91,9 +87,7 @@ public:
             t.timestamp = time_point_sec(time_in_seconds);
 
         });
-        print("GAN from ", name(from), ": \n", "STRAIN: ", strain, "\n" )
+        print("GAN from ", name(from), ": \n", "STRAIN: ", strain, "\n")
     }
-
-
 
 };
