@@ -1,12 +1,13 @@
 //
 // Created by Brandon Prof on 4/12/22.
 //
-#include "eosio.nft.hpp"
+#include "eosio.genometable.hpp"
 using namespace eosio;
 using namespace std;
 
 // TODO: Change nft to gan; should require name,
-ACTION nft::create( name issuer, std::string sym ) {
+ACTION gan::create( name
+issuer, std::string strain ) {
 
     require_auth( _self );
 
@@ -14,16 +15,17 @@ ACTION nft::create( name issuer, std::string sym ) {
     eosio_assert( is_account( issuer ), "issuer account does not exist");
 
     // Valid symbol
-    asset supply(0, symbol( symbol_code( sym.c_str() ), 0) );
+    asset supply(0, symbol( symbol_code( gan.c_str() ), 0) );
 
     auto symbol = supply.symbol;
-    eosio_assert( symbol.is_valid(), "invalid symbol name" );
+    eosio_assert( symbol.is_valid(), "invalid strain name" );
 
-    // Check if currency with symbol already exists
+    // Check if strain with symbol already exists
+    // we will use eosio currency symbol code to check for this.
     auto symbol_name = symbol.code().raw();
     currency_index currency_table( _self, symbol_name );
     auto existing_currency = currency_table.find( symbol_name );
-    eosio_assert( existing_currency == currency_table.end(), "token with symbol already exists" );
+    eosio_assert( existing_currency == currency_table.end(), "token with strain already exists" );
 
     // Create new currency
     currency_table.emplace( _self, [&]( auto& currency ) {

@@ -7,8 +7,10 @@ CONTRACT hashtable : public contract {
 public:
 using contract::contract;
 
-ACTION issue(name from, const string &strain, const string &genomehash,
+ACTION issue(name from, name assigned_producer, const string &strain, const string &genomehash,
              const string &genomefile, uint32_t time_in_seconds);
+
+ACTION transfer(name from, name to, string id, string memo);
 
 ACTION clear();
 
@@ -17,6 +19,7 @@ TABLE gan
         {
                 uint64_t id;
         name from;
+        name assigned_producer;
         string strain;
         string genomehash;
         string genomefile;
@@ -28,7 +31,7 @@ TABLE gan
 
         // need to define how to (de)serialize this structure
         // otherwise saving data will produce a WASM Runtime Error
-        EOSLIB_SERIALIZE(gan, (id)(from)(strain)(genomehash)(genomefile)(timestamp))
+        EOSLIB_SERIALIZE(gan, (id)(from)(assigned_producer)(strain)(genomehash)(genomefile)(timestamp))
         };
 
 typedef eosio::multi_index<

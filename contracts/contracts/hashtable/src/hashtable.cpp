@@ -26,11 +26,12 @@ public:
 
     TABLE gan
             {
-                    // Table row id
-                    // strain name
-                    // url to genome folder still massive file size right now.
-                    time_point_sec timestamp;
+            // Table row id
+            // strain name
+            // url to genome folder still massive file size right now.
+            time_point_sec timestamp;
             uint64_t id;
+            name    assigned_producer;
             string  strain;
             string  genomehash;
             string  genomefile;
@@ -42,7 +43,7 @@ public:
             // need to define how to (de)serialize this structure
             // otherwise saving data will produce a WASM Runtime Error
             // gan being a custom datatype "Genome assigned name"
-            EOSLIB_SERIALIZE(gan, (id)(strain)(genomehash)(genomefile)(timestamp))
+            EOSLIB_SERIALIZE(gan, (id)(assigned_producer)(strain)(genomehash)(genomefile)(timestamp))
             };
 
     // define genomelist as the multi_index storing the genome
@@ -61,7 +62,7 @@ public:
     /// @param issuer Account name of the token issuer
     /// @param symbol Symbol code of the token
 
-    ACTION issue(name from, const string &strain, const string &genomehash, const string genomefile) {
+    ACTION issue(name from, name assigned_producer, const string &strain, const string &genomehash, const string genomefile) {
         // authenticate 'from account to check gans integrity
         // will check if the action has the permission of 'from' account
         require_auth(from);
@@ -90,4 +91,7 @@ public:
         print("GAN from ", name(from), ": \n", "STRAIN: ", strain, "\n")
     }
 
+    ACTION transfer(name from, name to, string id, string memo){
+
+    }
 };

@@ -17,18 +17,23 @@ CONTRACT nft : public eosio::contract {
 
 public:
 using contract::contract;
-nft( name receiver, name code, datastream<const char*> ds)
+gan( name receiver, name code, datastream<const char*> ds)
 : contract(receiver, code, ds), tokens(receiver, receiver.value) {}
 
-
+// Creates token of symbol name for the issuer account.
+// Throws if token with specified symbol already exists
 ACTION create(name issuer, std::string symbol);
 
+// Issues x tokens into "to" account
+// each token will have its own unique token_id (This could be useful for
+// a family of genome? I'm not sure how this will work yet,
+// more genome/phenotype research needs to be done. -Brandon
 ACTION issue(name to,
 asset quantity,
         vector<string> uris,
 string name,
         string memo);
-
+// Obviously this is to transfer a different account.
 ACTION transferid(name from,
 name to,
         id_type id,
