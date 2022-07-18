@@ -35,6 +35,11 @@ public:
             string  strain;
             string  genomehash;
             string  genomefile;
+            uint64_t pain_relief;
+            uint64_t energy;
+            uint64_t sleep;
+            uint64_t cognitive_high;
+            uint64_t body_high;
 
             // Define primary key
             auto primary_key() const { return id; }
@@ -43,7 +48,8 @@ public:
             // need to define how to (de)serialize this structure
             // otherwise saving data will produce a WASM Runtime Error
             // gan being a custom datatype "Genome assigned name"
-            EOSLIB_SERIALIZE(gan, (id)(assigned_producer)(strain)(genomehash)(genomefile)(timestamp))
+            EOSLIB_SERIALIZE(gan, (id)(from)(assigned_producer)(strain)(genomehash)(genomefile)(timestamp)(pain_relief)(energy)
+            (sleep)(cognitive_high)(body_high))
             };
 
     // define genomelist as the multi_index storing the genome
@@ -54,7 +60,7 @@ public:
     typedef eosio::multi_index<
             "gans"_n,
             gan,
-            indexed_by<"time"_n, const_mem_fun < tweet, uint64_t, &gan::by_time>>>
+            indexed_by<"time"_n, const_mem_fun < gan, uint64_t, &gan::by_time>>>
     gans;
 
     /// Creates token with a symbol name for the specified issuer account.
@@ -62,7 +68,9 @@ public:
     /// @param issuer Account name of the token issuer
     /// @param symbol Symbol code of the token
 
-    ACTION issue(name from, name assigned_producer, const string &strain, const string &genomehash, const string genomefile) {
+    ACTION issue(name from, name assigned_producer, const string &strain, const string &genomehash,
+                 const string genomefile, uint64_t pain relief, uint64_t energy, uint64_t sleep, uint64_t cognitive_high, uint64_t
+    ) {
         // authenticate 'from account to check gans integrity
         // will check if the action has the permission of 'from' account
         require_auth(from);
@@ -86,6 +94,11 @@ public:
             t.genomehash = genomehash;
             t.genomefile = genomefile;
             t.timestamp = time_point_sec(time_in_seconds);
+            t.pain_relief;
+            t.energy;
+            t.sleep;
+            t.cognitive_high;
+            t.body_high;
 
         });
         print("GAN from ", name(from), ": \n", "STRAIN: ", strain, "\n")
